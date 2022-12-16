@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose"
 
+import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
 import hotelRoute from "./routes/hotels.js";
@@ -24,12 +25,12 @@ const connect = async () => {
 mongoose.connection.on("disconnected", () => {
     console.log('Mongodb disconnected');
 })
-
+app.use(cors());
 app.use(cookieParser());
-app.use(express.json())
+app.use(express.json());
 
 app.use('/api/auth', authRoute);
-app.use('/api/hotel', hotelRoute);
+app.use('/api/hotels', hotelRoute);
 app.use('/api/users', userRoute);
 app.use('/api/rooms', roomRoute);
 

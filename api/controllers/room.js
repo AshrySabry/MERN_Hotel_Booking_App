@@ -4,10 +4,13 @@ import {CreateError} from '../utils/error.js'
 
 export const createRoom = async(req,res,next) => {
     const hotelId = req.params.hotelid;
+    console.log('id', req.params.hotelid);
     const newRoom = new Room(req.body);
+    console.log('body', newRoom);
 
     try{
         const savedRoom = await newRoom.save();
+        console.log('savedroom',savedRoom)
         try{
             await Hotel.findByIdAndUpdate(hotelId, {$push : {rooms: savedRoom.id}})
         } catch (err) {
@@ -33,8 +36,16 @@ export const updateRoom = async (req, res, next) => {
 };
 
 export const deleteRoom = async (req,res,next) => {
+    const hotelId = req.params.hotelid;
     try{
         await Room.findByIdAndDelete(req.params.id);
+        try{
+            await Hotel.findByIdAndUpdate(hotelId, {
+                $pull: {  rooms: req.params.id }
+            });
+        } catch(err){
+            next(err)
+        }
         res.status(200).json("Room has been deleted");
     } catch(err){
         next(err)
@@ -60,3 +71,19 @@ export const getAllRooms = async (req,res,next) => {
         next(err)
     }
 }
+
+export const updateRoomAvailability = async (req, res, next) => {
+    try{
+        await Room.updateOne(
+            { "roomNumbers._id": req.params.id },
+            {
+                $push: {
+                    "roomNumbers.$.unavailableDates": req.body.dates
+                }
+            }
+            )
+        res.status(200).json("Room status has been updated");
+    } catch(err){
+        next(err)
+    }
+};

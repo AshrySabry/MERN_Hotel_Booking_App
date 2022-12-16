@@ -1,4 +1,5 @@
 import Hotel from '../models/Hotel.js'
+import Room from '../models/Room.js';
 
 export const createHotel = async (req, res, next) => {
     const newHotel = new Hotel(req.body);
@@ -45,9 +46,57 @@ export const getHotel = async (req,res,next) => {
 }
 
 export const getAllHotels = async (req,res,next) => {
+    const { min, max, ...others } = req.query;
     try{
-        const hotels = await Hotel.find();
+        const hotels = await Hotel.find({
+            // cheapestPrice: { $gt: min | 11, $lt: max  || 100000},
+        }).limit(req.query.limit);
+        console.log(hotels);
         res.status(200).json(hotels);
+    } catch(err){
+        next(err)
+    }
+}
+
+export const countByCity = async (req,res,next) => {
+    const cities = req.query.cities.split(",");
+    console.log('cities', cities);
+    try{
+        const list = await Promise.all(cities.map(city => {
+            return Hotel.countDocuments({city:city})
+        }))
+        res.status(200).json(list);
+    } catch(err){
+        next(err)
+    }
+};
+
+export const countByType = async (req,res,next) => {
+    try{
+        const hotelCount = await Hotel.countDocuments({type: "hotel"});
+        const apartmentCount = await Hotel.countDocuments({type: "apartment"});
+        const studioCount = await Hotel.countDocuments({type: "studio"});
+        const villaCount = await Hotel.countDocuments({type: "villa"});
+        const singleStoreyCount = await Hotel.countDocuments({type: "single_storey"});
+        res.status(200).json([
+            {type: "hotel", count: hotelCount},
+            {type: "apartment", count: apartmentCount},
+            {type: "studio", count: studioCount},
+            {type: "villa", count: villaCount},
+            {type: "single_storey", count: singleStoreyCount},
+        ]);
+    } catch(err){
+        next(err)
+    }
+};
+
+export const getHotelRooms = async (req,res,next) => {
+    try{
+        const hotel = await Hotel.findById(req.params.id);
+        const list = await Promise.all(hotel.rooms.map((room)=>{
+            return Room.findById(room);
+        }))
+        res.status(200).json(list)
     } catch(err){
         next(err)
     }
