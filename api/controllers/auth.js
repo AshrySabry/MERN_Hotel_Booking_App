@@ -4,9 +4,12 @@ import {CreateError} from '../utils/error.js'
 import jwt from 'jsonwebtoken'
 
 export const register = async (req,res,next) => {
+    console.log('pass', req.body);
     try{
         const salt = bcrypt.genSaltSync(10);
+        console.log('salt',salt);
         const hash = bcrypt.hashSync(req.body.password, salt);
+        console.log(hash);
 
         const newUser = new User({
             ...req.body,
